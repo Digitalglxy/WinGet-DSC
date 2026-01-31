@@ -1,0 +1,101 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  assertions:
+    - resource: Microsoft.Windows.Developer/OsVersion
+      directives:
+        description: Verify min OS version requirement (Windows 11 24H2)
+        allowPrerelease: true
+      settings:
+        MinVersion: '10.0.26100'
+  resources:
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Package.VLC
+      directives:
+        description: Installation de Media Player
+        securityContext: elevated
+      settings:
+        id: VideoLAN.VLC
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Package.7Zip
+      directives:
+        description: Installation de 7-Zip
+        securityContext: elevated
+      settings:
+        id: 7zip.7zip
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Package.Firefox
+      directives:
+        description: Installation de Mozilla Firefox ESR
+        securityContext: current
+      settings:
+        id: Mozilla.Firefox.ESR.fr
+        source: winget
+
+    - resource: Microsoft.WinGet.DSC/WinGetPackage
+      id: Package.PowerToys
+      directives:
+        description: Installation de PowerToys
+        securityContext: current
+      settings:
+        id: XP89DCGQ3K6VLD
+        source: msstore
+
+    - resource: PSDscResources/Registry
+      id: Registry.RegBackup
+      directives:
+        description: Activation de la sauvegarde automatique du Registre
+        securityContext: elevated
+      settings:
+        Key: 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Configuration Manager'
+        ValueName: 'EnablePeriodicBackup'
+        ValueData: 1
+        ValueType: Dword
+        Ensure: Present
+        Force: true
+
+    - resource: Microsoft.Windows.Developer/WindowsExplorer
+      directives:
+        description: Modify Windows Explorer settings
+        allowPrerelease: true
+      settings:
+        FileExtensions: Show
+        HiddenFiles: Hide
+        RestartExplorer: True
+
+    - resource: Microsoft.Windows.Developer/Taskbar
+      directives:
+        description: Modify taskbar settings
+        allowPrerelease: true
+      settings:
+        Alignment: Left
+        SearchBoxMode: ShowIconAndLabel
+        TaskViewButton: Show
+        WidgetsButton: Hide
+
+    - resource: PSDscResources/Script
+      id: PowerShell.SourcesFolder
+      directives:
+        description: Création du dossier C:\sources
+        securityContext: elevated
+        allowPrerelease: true
+      settings:
+        # GetScript : Retourne l'état actuel (Obligatoire, sinon la ressource retourne une erreur)
+        GetScript: |
+          $exist = Test-Path 'C:\sources'
+          return @{ Result = if ($exist) { "Present" } else { "Absent" } }
+
+        # TestScript : Vérifie si le dossier existe déjà.
+        # Renvoie $true si le dossier est là (ne rien faire).
+        # Renvoie $false si le dossier manque (lancer le SetScript).
+        TestScript: |
+          return (Test-Path 'C:\sources')
+
+        # SetScript : La commande de création (exécutée uniquement si TestScript = $false)
+        SetScript: |
+          New-Item -Path 'C:\sources' -ItemType Directory -Force
+
+  configurationVersion: 0.2.0
