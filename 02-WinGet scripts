@@ -1,0 +1,3 @@
+# Rechercher une application dans WinGet
+winget search <nom du logiciel>
+winget search powertoys
